@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AgentRuntime, RuntimeCapacityError } from "../dist/index.js";
+import { AgentRuntime, InMemoryMemory, RuntimeCapacityError } from "../dist/index.js";
 
 test("keeps memory isolated by tenant and session", async () => {
   const runtime = new AgentRuntime();
   const agent = {
-    run: (input, context) => {
-      context.memory.addMessage({ role: "user", content: input });
-      return context.memory.getMessages().map((message) => message.content);
+    run: async (input, context) => {
+      await context.memory.addMessage({ role: "user", content: input });
+      return (await context.memory.getMessages()).map((message) => message.content);
     }
   };
 
@@ -112,4 +112,21 @@ test("rejects empty scope identifiers", async () => {
     agent: { run: () => null },
     input: null
   }), TypeError);
+});
+
+test("clears and returns defensive copies of memory", async () => {
+  const memory = new InMemoryMemory().forSession("tenant", "session");
+  await memory.addMessage({ role: "user", content: "original", metadata: { tag: "safe" } });
+
+  const messages = await memory.getMessages();
+  messages[0].content = "changed";
+  messages[0].metadata.tag = "changed";
+  assert.deepEqual(await memory.getMessages(), [
+    { role: "user", content: "original", metadata: { tag: "safe" } }
+  ]);
+
+  await memory.clear();
+  assert.deepEqual(await memory.getMessages(), []);
+  await memory.addMessage({ role: "user", content: "after clear" });
+  assert.deepEqual((await memory.getMessages()).map((message) => message.content), ["after clear"]);
 });

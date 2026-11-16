@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,11 +20,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://localhost:26831/linkerlin/agentscope.ts"
+    "url": "https://github.com/linkerlin/agentscope.ts.git"
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "typescript": "^7.0.2"
   }

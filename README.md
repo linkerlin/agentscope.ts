@@ -19,9 +19,9 @@ import { AgentRuntime } from "agentscope.ts";
 const runtime = new AgentRuntime({ maxConcurrency: 32, maxQueueSize: 256 });
 const agent = {
   async run(input: string, { memory }) {
-    memory.addMessage({ role: "user", content: input });
+    await memory.addMessage({ role: "user", content: input });
     const answer = `Received: ${input}`;
-    memory.addMessage({ role: "assistant", content: answer });
+    await memory.addMessage({ role: "assistant", content: answer });
     return answer;
   }
 };
@@ -37,9 +37,10 @@ const answer = await runtime.run({
 
 Each run receives memory isolated by the pair `(tenantId, sessionId)`. Supply
 tenant identifiers from a trusted authentication layer; this package does not
-authenticate requests or provide durable storage. `maxConcurrency` limits
-active agent calls, `maxQueueSize` bounds pending calls, and queued calls can
-be cancelled with an `AbortSignal`.
+authenticate requests or provide durable storage. Implement `MemoryStore` and
+pass it to `AgentRuntime` to use an external storage backend. `maxConcurrency`
+limits active agent calls, `maxQueueSize` bounds pending calls, and queued
+calls can be cancelled with an `AbortSignal`.
 
 ## Development
 

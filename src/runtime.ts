@@ -1,5 +1,5 @@
 import type { Agent } from "./agent.js";
-import { InMemoryMemory } from "./memory.js";
+import { InMemoryMemory, type MemoryStore } from "./memory.js";
 
 export class RuntimeCapacityError extends Error {
   constructor() {
@@ -76,20 +76,20 @@ class Semaphore {
 export interface AgentRuntimeOptions {
   readonly maxConcurrency?: number;
   readonly maxQueueSize?: number;
-  readonly memory?: InMemoryMemory;
+  readonly memory?: MemoryStore;
 }
 
-export interface AgentRun<Input> {
+export interface AgentRun<Input, Output = unknown> {
   readonly tenantId: string;
   readonly sessionId: string;
-  readonly agent: Agent<Input, unknown>;
+  readonly agent: Agent<Input, Output>;
   readonly input: Input;
   readonly signal?: AbortSignal;
 }
 
 export class AgentRuntime {
   private readonly semaphore: Semaphore;
-  private readonly memory: InMemoryMemory;
+  private readonly memory: MemoryStore;
 
   constructor(options: AgentRuntimeOptions = {}) {
     const maxConcurrency = options.maxConcurrency ?? 100;
@@ -110,7 +110,7 @@ export class AgentRuntime {
     agent,
     input,
     signal
-  }: AgentRun<Input>): Promise<Output> {
+  }: AgentRun<Input, Output>): Promise<Output> {
     if (!tenantId.trim()) throw new TypeError("tenantId must not be empty");
     if (!sessionId.trim()) throw new TypeError("sessionId must not be empty");
 
@@ -122,7 +122,7 @@ export class AgentRuntime {
         sessionId,
         memory: this.memory.forSession(tenantId, sessionId),
         signal
-      }) as Output;
+      });
     } finally {
       release();
     }
